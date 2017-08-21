@@ -17,4 +17,6 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::get('/comment', 'CommentController@writeComment');
+Route::model('post', App\Models\Post::class);
+
+Route::get('/comment/{post}', 'PostController@writeComment');

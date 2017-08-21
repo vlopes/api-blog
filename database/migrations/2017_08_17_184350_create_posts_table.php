@@ -20,6 +20,8 @@ class CreatePostsTable extends Migration
             $table->string('title');
             $table->string('text');
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 
@@ -30,6 +32,6 @@ class CreatePostsTable extends Migration
      */
     public function down()
     {
-        //
+        Schema::drop('posts');
     }
 }
