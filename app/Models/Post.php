@@ -5,21 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Comment;
+use Carbon\Carbon;
 
 class Post extends Model
 {
     public function writer()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function userCanWriteComment(User $user)
     {
-        if ($user->isPremium() || $user->isFeatured()) {
-            return true;
-        };
+        $timePassed = !$user->comments()->where('created_at', '>', Carbon::now()->subMinutes(2))->count();
 
-        return false;
+        return ($user->isPremium() || $user->isFeatured()) && $timePassed;
     }
 
     public function comments()

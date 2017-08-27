@@ -13,20 +13,36 @@ class PostController extends Controller
         $token = $request->get('token');
 
         if (!$token) {
-            //sem usuario
+            return response()->json([
+                'code' =>  401,
+                'error' => 'Unauthorized',
+                'message' => 'Token not found on request',
+            ]);
         }
 
-        //verificar o tempo do comentario anterior
-
         $user = User::where('remember_token', $token)->get()->first();
-
+        
         if ($post->userCanWriteComment($user)) {
             $post->comments()->create([
                 'user_id' => $user->id,
                 'text' => $request->get('comment')
             ]);
+
+            $post->writer->notifications()
+                ->create([
+                    'message' => "{$user->name} wrote a comment on your post {$post->title}"
+                ]);
+
+            return response()->json([
+                'code' => 200,
+                'message' => 'Ok!'
+            ]);
         }
 
-        //nao pode escrever comentario
+        return response()->json([
+            'code' => 403,
+            'error' => 'Forbidden',
+            'message' => "User can't write comments",
+        ]);
     }
 }
