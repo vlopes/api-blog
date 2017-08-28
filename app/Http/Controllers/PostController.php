@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
+use Carbon\Carbon;
 
 class PostController extends Controller
 {
@@ -37,9 +38,7 @@ class PostController extends Controller
             ]);
 
             $post->writer->notifications()
-                ->create([
-                    'message' => "{$user->name} wrote a comment on your post {$post->title}"
-                ]);
+                ->create(['message' => "{$user->name} wrote a comment on your post {$post->title}"]);
 
             return response()->json([
                 'code' => 200,
@@ -76,9 +75,47 @@ class PostController extends Controller
         $comments = $comments->forPage($page, $perPage);
 
         return response()->json([
-            'code' => '200',
+            'code' => 200,
             'message' => 'Ok!',
             'comments' => $comments
+        ]);
+    }
+
+    public function getNotifications(Request $request)
+    {
+        $token = $request->get('token');
+
+        if (!$token) {
+            return response()->json([
+                'code' =>  401,
+                'error' => 'Unauthorized',
+                'message' => 'Token not found on request',
+            ]);
+        }
+
+        try {
+            $user = User::where('remember_token', $token)->firstOrFail();
+        } catch (\Exception $e) {
+            return response()->json([
+                'code' =>  401,
+                'error' => 'Unauthorized',
+                'message' => 'Token missmatch',
+            ]);
+        }
+
+        $notifications = $user->recentNotifications()->each(function ($notification) {
+            if (!! $notification->read_at) {
+                return;
+            }
+
+            $notification->read_at = Carbon::now()->toDateTimeString();
+            $notification->save();
+        });
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Ok!',
+            'notifications' => $notifications->toArray()
         ]);
     }
 }
