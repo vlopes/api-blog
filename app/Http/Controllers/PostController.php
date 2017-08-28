@@ -70,7 +70,10 @@ class PostController extends Controller
                 ];
             });
 
-        //paginacao
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 5);
+
+        $comments = $comments->forPage($page, $perPage);
 
         return response()->json([
             'code' => '200',
