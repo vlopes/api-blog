@@ -10,4 +10,9 @@ class Comment extends Model
         'user_id',
         'text',
     ];
+
+    public function writer()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

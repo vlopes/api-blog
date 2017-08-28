@@ -20,3 +20,4 @@ use Illuminate\Http\Request;
 Route::model('post', App\Models\Post::class);
 
 Route::get('/comment/{post}', 'PostController@writeComment');
+Route::get('/post/{post}/comments', 'PostController@getComments');

@@ -20,7 +20,15 @@ class PostController extends Controller
             ]);
         }
 
-        $user = User::where('remember_token', $token)->get()->first();
+        try {
+            $user = User::where('remember_token', $token)->firstOrFail();
+        } catch (\Exception $e) {
+            return response()->json([
+                'code' =>  401,
+                'error' => 'Unauthorized',
+                'message' => 'Token missmatch',
+            ]);
+        }
         
         if ($post->userCanWriteComment($user)) {
             $post->comments()->create([
@@ -43,6 +51,31 @@ class PostController extends Controller
             'code' => 403,
             'error' => 'Forbidden',
             'message' => "User can't write comments",
+        ]);
+    }
+
+    public function getComments(Request $request, Post $post)
+    {
+        $comments = $post->comments()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($comment) {
+                return [
+                    'user_id' => $comment->user_id,
+                    'comment_id' => $comment->id,
+                    'login' => $comment->writer->email,
+                    'premium' => $comment->writer->premium,
+                    'created_at' => $comment->created_at,
+                    'comment' => $comment->text,
+                ];
+            });
+
+        //paginacao
+
+        return response()->json([
+            'code' => '200',
+            'message' => 'Ok!',
+            'comments' => $comments
         ]);
     }
 }
